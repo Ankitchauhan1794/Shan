@@ -84,6 +84,8 @@
       pointer-events: none;
     }
   </style>
+  <!-- Real-time MQTT WebSocket Engine for Long Distance Play -->
+  <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 </head>
 <body class="bg-gradient-to-br from-rose-50 via-pink-50 to-amber-50 text-slate-800 min-h-screen flex flex-col antialiased selection:bg-rose-200 selection:text-rose-900">
 
@@ -131,6 +133,22 @@
           <span class="hidden sm:inline">Legend 18+</span>
         </button>
         <!-- Audio button -->
+                <!-- Live Long Distance Room Pill -->
+        <div id="navRoomPill" class="hidden items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-xs cursor-pointer" title="Online Room Status & Copy Link">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="navRoomStatusDot"></span>
+          <span id="navRoomCodeText">Room: LOVE-482</span>
+          <button type="button" id="navCopyRoomLinkBtn" class="text-[10px] text-emerald-700 hover:text-emerald-900 underline font-bold" title="Copy Invite Link">📋</button>
+        </div>
+        <!-- Live Love Ping Reaction Button -->
+        <button id="navSendLovePingBtn" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 transition shadow-xs" title="Send Live Reaction Ping to Partner">
+          <span>💋</span>
+          <span class="hidden sm:inline">Love Ping</span>
+        </button>
+        <!-- Leave Room / Lobby Button -->
+        <button id="navRoomExitBtn" class="hidden items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="Leave Current Online Room">
+          <span>🚪</span>
+          <span class="hidden md:inline">Exit Room</span>
+        </button>
         <button id="soundToggleBtn" class="p-2 rounded-xl text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition" title="Toggle Sound">
           <svg id="soundOnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
@@ -168,9 +186,226 @@
   <!-- Main Content Container -->
   <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 pb-24">
 
-    <!-- VIEW 1: HOME DASHBOARD -->
-    <div id="viewHome" class="space-y-6">
+    <!-- VIEW 0: LOBBY & ONLINE ROOM SELECTOR (DEFAULT LANDING VIEW) -->
+    <div id="viewLobby" class="space-y-6">
+      <!-- Hero Banner matching Image 1 -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-900 via-rose-800 to-slate-900 shadow-xl border border-rose-200/40 text-white p-6 sm:p-8">
+        <div class="space-y-2 max-w-2xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold text-rose-100">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span>REAL-TIME LONG DISTANCE MULTIPLAYER READY</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight font-serif text-white">
+            Couples Quiz & Intimate Connection
+          </h2>
+          <p class="text-rose-100/90 text-xs sm:text-sm leading-relaxed">
+            Play seamlessly together from across the room or across the world — real-time multiplayer, deep talks, and romantic intimacy. No pass and play!
+          </p>
+          <div class="pt-2 flex flex-wrap gap-2 text-xs font-medium">
+            <span class="bg-rose-950/60 px-3 py-1 rounded-lg border border-rose-400/30">🌐 Play From Separate Phones</span>
+            <span class="bg-rose-950/60 px-3 py-1 rounded-lg border border-rose-400/30">⚡ Live Synchronized Turns</span>
+            <span class="bg-rose-950/60 px-3 py-1 rounded-lg border border-rose-400/30">🔒 100% Private 2-Player Rooms</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center sm:text-left px-1">
+        <h3 class="font-bold text-slate-800 text-lg">Choose how you want to connect tonight:</h3>
+        <p class="text-xs text-slate-500">Create a private room to send your partner, or enter their room code.</p>
+      </div>
+
+      <!-- 2 Main Long Distance Room Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- Card 1: Create Romantic Room -->
+        <div class="bg-white rounded-3xl p-6 border-2 border-rose-200 shadow-md hover:shadow-xl transition flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400 text-white flex items-center justify-center text-3xl shadow-md shadow-rose-200">
+                🏰
+              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200 uppercase tracking-wider">HOST ROOM</span>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-800 text-lg">Create Romantic Room</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                Start a new private 2-player room, choose your nickname and get a shareable room code or link to send your partner.
+              </p>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Your Nickname</label>
+                <input type="text" id="lobbyCreateNameInput" value="Shan" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold focus:ring-2 focus:ring-rose-400 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Choose Avatar</label>
+                <div class="flex gap-2" id="lobbyAvatarSelector">
+                  <button type="button" class="lobbyAvatarBtn w-9 h-9 rounded-xl border-2 border-rose-500 bg-rose-50 text-base" data-avatar="👑">👑</button>
+                  <button type="button" class="lobbyAvatarBtn w-9 h-9 rounded-xl border-2 border-slate-200 hover:border-rose-300 text-base" data-avatar="💖">💖</button>
+                  <button type="button" class="lobbyAvatarBtn w-9 h-9 rounded-xl border-2 border-slate-200 hover:border-rose-300 text-base" data-avatar="🦁">🦁</button>
+                  <button type="button" class="lobbyAvatarBtn w-9 h-9 rounded-xl border-2 border-slate-200 hover:border-rose-300 text-base" data-avatar="🌸">🌸</button>
+                  <button type="button" class="lobbyAvatarBtn w-9 h-9 rounded-xl border-2 border-slate-200 hover:border-rose-300 text-base" data-avatar="⚡">⚡</button>
+                  <button type="button" class="lobbyAvatarBtn w-9 h-9 rounded-xl border-2 border-slate-200 hover:border-rose-300 text-base" data-avatar="💎">💎</button>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Room Code</label>
+                  <button type="button" id="lobbyRandomizeCodeBtn" class="text-xs text-rose-600 font-bold hover:underline">🎲 Randomize</button>
+                </div>
+                <input type="text" id="lobbyCreateCodeInput" value="LOVE-482" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-mono font-bold uppercase tracking-widest text-rose-700 bg-rose-50/50 focus:ring-2 focus:ring-rose-400 focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <button id="lobbyCreateRoomBtn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white font-extrabold text-sm shadow-lg shadow-rose-200 transition active:scale-[0.99] flex items-center justify-center gap-2">
+            <span>Create Room & Invite Partner</span>
+            <span>🚀</span>
+          </button>
+        </div>
+
+        <!-- Card 2: Join Partner's Room -->
+        <div class="bg-white rounded-3xl p-6 border-2 border-purple-200 shadow-md hover:shadow-xl transition flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-500 to-rose-400 text-white flex items-center justify-center text-3xl shadow-md shadow-purple-200">
+                🔗
+              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-purple-100 text-purple-800 border border-purple-200 uppercase tracking-wider">JOIN ROOM</span>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-800 text-lg">Join Partner's Room</h4>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                Enter the room code shared by your partner, or paste their invite link to connect instantly from your device.
+              </p>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Your Nickname</label>
+                <input type="text" id="lobbyJoinNameInput" value="Partner" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold focus:ring-2 focus:ring-purple-400 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Enter Room Code</label>
+                <input type="text" id="lobbyJoinCodeInput" placeholder="e.g. LOVE-482" class="w-full px-4 py-2.5 rounded-xl border border-purple-200 text-sm font-mono font-bold uppercase tracking-widest text-purple-800 bg-purple-50/40 focus:ring-2 focus:ring-purple-400 focus:outline-none">
+              </div>
+              <div class="p-3 rounded-xl bg-purple-50/70 border border-purple-100 text-[11px] text-purple-800">
+                💡 If your partner sent you a WhatsApp or direct link, opening it auto-fills the room code!
+              </div>
+            </div>
+          </div>
+
+          <button id="lobbyJoinRoomBtn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-500 hover:to-rose-500 text-white font-extrabold text-sm shadow-lg shadow-purple-200 transition active:scale-[0.99] flex items-center justify-center gap-2">
+            <span>Connect & Enter Room</span>
+            <span>💌</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Card 3: Pass & Play Mode (Single Phone) Fallback -->
+      <div class="bg-white/80 rounded-2xl p-4 border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">📱</span>
+          <div>
+            <p class="font-bold text-slate-700">Sitting next to each other right now?</p>
+            <p class="text-slate-500 text-[11px]">Play on one device with automated privacy handoff screens.</p>
+          </div>
+        </div>
+        <button id="lobbyPassAndPlayBtn" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition shrink-0">
+          Play on One Phone
+        </button>
+      </div>
+    </div>
+
+    <!-- VIEW 0.5: ROOM WAITING / INVITE HUB -->
+    <div id="viewRoomWaiting" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-rose-100 space-y-6 text-center max-w-2xl mx-auto">
+        <div class="space-y-2">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></span>
+            <span id="waitingRoomStatusBadge">WAITING FOR PARTNER TO JOIN</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 font-serif">
+            Your Romantic Room is Live!
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-500">
+            Share this room code or link with your partner so they can connect from their phone.
+          </p>
+        </div>
+
+        <!-- Big Room Code Display Box -->
+        <div class="p-6 rounded-3xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 border-2 border-rose-300 space-y-3">
+          <span class="text-xs uppercase font-extrabold tracking-widest text-rose-600 block">ROOM PASSCODE</span>
+          <div class="text-4xl sm:text-5xl font-black font-mono tracking-widest text-slate-900 select-all" id="waitingRoomCodeDisplay">
+            LOVE-482
+          </div>
+          <div class="flex flex-wrap justify-center gap-2 pt-2">
+            <button id="waitingCopyLinkBtn" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 active:scale-95">
+              <span>📋 Copy Direct Invite Link</span>
+            </button>
+            <button id="waitingShareWhatsappBtn" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 active:scale-95">
+              <span>💬 Send via WhatsApp</span>
+            </button>
+            <button id="waitingCopyCodeBtn" class="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs border border-slate-200 transition active:scale-95">
+              <span>Copy Code</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Two Player Slots Status -->
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <!-- Slot 1: Host -->
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1 text-center" id="waitingSlotHost">
+            <span class="text-2xl block" id="waitingHostAvatar">👑</span>
+            <p class="font-bold text-slate-800 text-sm" id="waitingHostName">Shan</p>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">CONNECTED (HOST)</span>
+          </div>
+
+          <!-- Slot 2: Guest -->
+          <div class="p-4 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 space-y-1 text-center" id="waitingSlotGuest">
+            <span class="text-2xl block animate-pulse" id="waitingGuestAvatar">⏳</span>
+            <p class="font-bold text-slate-400 text-sm" id="waitingGuestName">Waiting for Partner...</p>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800" id="waitingGuestStatus">NOT CONNECTED</span>
+          </div>
+        </div>
+
+        <!-- Live Connection Banner & Enter Button -->
+        <div id="waitingConnectedActions" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
+          <p class="font-extrabold text-emerald-800 text-sm">🎉 Partner Connected! You are both ready to play!</p>
+          <button id="waitingEnterHubBtn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-sm shadow-md transition active:scale-95">
+            Enter Game Hub Together 🚀
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+          <button id="waitingCancelRoomBtn" class="text-slate-400 hover:text-rose-600 transition">Cancel & Leave Room</button>
+          <span class="text-slate-400 font-mono text-[11px]" id="waitingBrokerStatus">Broker: hivemq.com (wss)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 1: HOME DASHBOARD (HIDDEN INITIALLY UNTIL ROOM JOINED) -->
+    <div id="viewHome" class="hidden space-y-6">
       
+      <!-- Live Long Distance Room Status Banner -->
+      <div id="homeRoomStatusBar" class="hidden bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-3.5 px-5 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-emerald-300 animate-ping"></span>
+          <div>
+            <p class="font-extrabold text-xs tracking-wide">🟢 LONG DISTANCE ROOM: <span id="homeRoomCodeBadge" class="font-mono text-amber-200">LOVE-482</span></p>
+            <p class="text-[11px] text-emerald-100" id="homeRoomConnectedDesc">Playing live across distance with Partner</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="homePingPartnerBtn" class="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs transition flex items-center gap-1">
+            <span>💖 Send Love Ping</span>
+          </button>
+          <button id="homeCopyRoomLinkBtn" class="px-3 py-1.5 rounded-xl bg-white text-emerald-800 font-bold text-xs shadow-xs hover:bg-emerald-50 transition">
+            📋 Invite Link
+          </button>
+        </div>
+      </div>
+
       <!-- Hero Banner with Cozy Generated Couple Image -->
       <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-900 via-rose-800 to-slate-900 shadow-xl border border-rose-200/40 text-white">
         <div class="absolute inset-0 opacity-40 mix-blend-overlay">
@@ -1952,6 +2187,37 @@
     </div>
   </div>
 
+  <!-- Floating Love Emoji Container -->
+  <div id="floatingLoveEmojiContainer" class="fixed inset-0 pointer-events-none z-50 overflow-hidden"></div>
+
+  <!-- MODAL: LIVE LOVE PING & REACTION TRAY -->
+  <div id="lovePingModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 animate-scaleUp text-center">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
+          <span>💖 Send Live Love Ping</span>
+        </h3>
+        <button id="closeLovePingModalBtn" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1">×</button>
+      </div>
+      <p class="text-xs text-slate-500">Tap an emoji to float across your partner's screen in real-time!</p>
+      
+      <div class="grid grid-cols-3 gap-2.5 py-2">
+        <button class="lovePingActionBtn p-3 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-2xl transition hover:scale-110 active:scale-95" data-emoji="💋" data-label="Sent a passionate kiss!">💋</button>
+        <button class="lovePingActionBtn p-3 rounded-2xl bg-pink-50 hover:bg-pink-100 border border-pink-200 text-2xl transition hover:scale-110 active:scale-95" data-emoji="💖" data-label="Sent fluttering love!">💖</button>
+        <button class="lovePingActionBtn p-3 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-2xl transition hover:scale-110 active:scale-95" data-emoji="🔥" data-label="Thinks you are so hot!">🔥</button>
+        <button class="lovePingActionBtn p-3 rounded-2xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-2xl transition hover:scale-110 active:scale-95" data-emoji="🙈" data-label="Blushing over you!">🙈</button>
+        <button class="lovePingActionBtn p-3 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-2xl transition hover:scale-110 active:scale-95" data-emoji="🤗" data-label="Sent a tight warm hug!">🤗</button>
+        <button class="lovePingActionBtn p-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-2xl transition hover:scale-110 active:scale-95" data-emoji="💍" data-label="Forever yours!">💍</button>
+      </div>
+
+      <div class="pt-2 border-t border-slate-100">
+        <button id="lovePingQuickMissYouBtn" class="w-full py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs transition">
+          "I Miss You & Love You So Much!" 💌
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- In-Page Toast Notification Container -->
   <div id="toastNotification" class="fixed top-20 right-4 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-semibold">
     <span id="toastIcon">✨</span>
@@ -2721,6 +2987,31 @@
       };
     }
 
+
+    function connectToOnlineRoom(roomCode, asHost = false, chosenName = 'Shan', chosenAvatar = '👑') {
+      const cleanCode = roomCode.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
+      if (!cleanCode) {
+        showToast('Please enter a valid room code', '⚠️');
+        return;
+      }
+      currentRoomCode = cleanCode;
+      isHost = asHost;
+      myPlayerName = chosenName.trim() || (isHost ? 'Shan' : 'Partner');
+      myAvatar = chosenAvatar || (isHost ? '👑' : '💖');
+      isLongDistanceMode = true;
+
+      // Update state names
+      if (isHost) {
+        state.partner1 = myPlayerName;
+        partnerPlayerName = state.partner2 || 'Partner';
+      } else {
+        state.partner2 = myPlayerName;
+        partnerPlayerName = state.partner1 || 'Shan';
+      }
+      saveState();
+
+      initMqttConnection(cleanCode);
+    }
     let state = loadState();
 
     function saveState() {
@@ -2810,13 +3101,20 @@
 
     // --- VIEW SWITCHING MANAGER ---
     const allViews = [
-      'viewHome', 'viewQuizSetup', 'viewQuizPlay', 'viewHandoff', 
+      'viewLobby', 'viewRoomWaiting', 'viewHome', 'viewQuizSetup', 'viewQuizPlay', 'viewHandoff', 
       'viewQuizResult', 'viewWheel', 'viewTruthDare', 'viewWouldRather', 
       'viewLoveNotes', 'viewStudio', 'viewLegendSpicy', 'viewDesireMatcher',
       'viewLieDetector'
     ];
 
-    function showView(targetId) {
+    function showView(targetId, shouldBroadcast = true) {
+      // If long distance room is active, synchronize view navigation between partners
+      if (shouldBroadcast && isLongDistanceMode && currentRoomCode && isPartnerConnected) {
+        const titleEl = document.querySelector(`#${targetId} h2`) || document.querySelector(`#${targetId} h3`);
+        const title = titleEl ? titleEl.textContent.trim().slice(0, 30) : targetId;
+        broadcastRoomMessage('NAVIGATE_VIEW', { targetView: targetId, targetViewTitle: title });
+      }
+
       allViews.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -2893,6 +3191,481 @@
     }
 
     // --- QUIZ LOGIC ("HOW WELL DO YOU KNOW ME?") ---
+    // ========================================================
+    // --- 🌐 REAL-TIME LONG DISTANCE MULTIPLAYER ENGINE ---
+    // ========================================================
+    const MQTT_BROKERS = [
+      'wss://broker.hivemq.com:8884/mqtt',
+      'wss://broker.emqx.io:8084/mqtt'
+    ];
+    let mqttBrokerIdx = 0;
+    let mqttClient = null;
+    let myPlayerId = 'p_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+    let myPlayerName = 'Shan';
+    let myAvatar = '👑';
+    let partnerPlayerName = 'Partner';
+    let partnerAvatar = '💖';
+    let currentRoomCode = null;
+    let isHost = true;
+    let isLongDistanceMode = false;
+    let isPartnerConnected = false;
+    let heartbeatPingInterval = null;
+    let wyrLocalVote = null;
+    let wyrPartnerVote = null;
+
+    const CUTE_ROOM_WORDS = ['LOVE', 'HEART', 'SWEET', 'SPARK', 'HONEY', 'SOUL', 'FLAME', 'AMORE', 'DARLING', 'KISS'];
+    function generateRomanticRoomCode() {
+      const word = CUTE_ROOM_WORDS[Math.floor(Math.random() * CUTE_ROOM_WORDS.length)];
+      const num = Math.floor(100 + Math.random() * 900);
+      return `${word}-${num}`;
+    }
+
+    function getInviteUrl(code) {
+      const base = window.location.origin + window.location.pathname;
+      return `${base}?room=${encodeURIComponent(code)}`;
+    }
+
+    function updateBrokerStatusUI(text) {
+      const el = document.getElementById('waitingBrokerStatus');
+      if (el) el.textContent = text;
+    }
+
+    function initMqttConnection(roomCode) {
+      const brokerUrl = MQTT_BROKERS[mqttBrokerIdx % MQTT_BROKERS.length];
+      const topic = `shan_couple_games_v3/room_${roomCode}`;
+      updateBrokerStatusUI(`Broker: ${brokerUrl.split('://')[1].split(':')[0]} (connecting...)`);
+
+      if (typeof mqtt === 'undefined') {
+        console.warn('MQTT client not loaded from CDN, running in local simulated mode.');
+        onRoomConnectedSuccessfully(roomCode);
+        return;
+      }
+
+      try {
+        if (mqttClient) {
+          try { mqttClient.end(true); } catch(e){}
+        }
+
+        const clientId = `scg_${myPlayerId}`;
+        mqttClient = mqtt.connect(brokerUrl, {
+          clientId: clientId,
+          clean: true,
+          connectTimeout: 8000,
+          reconnectPeriod: 4000,
+          keepalive: 30
+        });
+
+        mqttClient.on('connect', () => {
+          console.log('Connected to MQTT Broker:', brokerUrl);
+          updateBrokerStatusUI(`Broker: ${brokerUrl.split('://')[1].split(':')[0]} (🟢 connected)`);
+          mqttClient.subscribe(topic, { qos: 1 }, (err) => {
+            if (!err) {
+              console.log('Subscribed to room topic:', topic);
+              onRoomConnectedSuccessfully(roomCode);
+            }
+          });
+        });
+
+        mqttClient.on('message', (t, payload) => {
+          try {
+            const data = JSON.parse(payload.toString());
+            if (data.senderId === myPlayerId) return; // ignore our own messages
+            handleIncomingNetworkMessage(data);
+          } catch(e) {
+            console.error('Failed to parse incoming room message:', e);
+          }
+        });
+
+        mqttClient.on('error', (err) => {
+          console.error('MQTT error:', err);
+          updateBrokerStatusUI(`Broker error. Trying backup...`);
+        });
+
+        mqttClient.on('close', () => {
+          console.log('MQTT connection closed.');
+        });
+      } catch(e) {
+        console.error('MQTT initialization error:', e);
+        onRoomConnectedSuccessfully(roomCode);
+      }
+    }
+
+    function broadcastRoomMessage(type, payload = {}) {
+      if (!isLongDistanceMode || !currentRoomCode) return;
+      const data = {
+        type: type,
+        senderId: myPlayerId,
+        senderName: myPlayerName,
+        senderAvatar: myAvatar,
+        roomCode: currentRoomCode,
+        timestamp: Date.now(),
+        payload: payload
+      };
+
+      if (mqttClient && mqttClient.connected) {
+        const topic = `shan_couple_games_v3/room_${currentRoomCode}`;
+        mqttClient.publish(topic, JSON.stringify(data), { qos: 1 });
+      }
+    }
+
+    function onRoomConnectedSuccessfully(code) {
+      updateNavRoomUI();
+      if (heartbeatPingInterval) clearInterval(heartbeatPingInterval);
+      heartbeatPingInterval = setInterval(() => {
+        broadcastRoomMessage('HEARTBEAT_PING', { name: myPlayerName });
+      }, 10000);
+
+      if (isHost) {
+        const codeDisplay = document.getElementById('waitingRoomCodeDisplay');
+        const hostNameEl = document.getElementById('waitingHostName');
+        const hostAvatarEl = document.getElementById('waitingHostAvatar');
+        const guestNameEl = document.getElementById('waitingGuestName');
+        const guestAvatarEl = document.getElementById('waitingGuestAvatar');
+        const guestStatus = document.getElementById('waitingGuestStatus');
+        const connectedActions = document.getElementById('waitingConnectedActions');
+
+        if (codeDisplay) codeDisplay.textContent = code;
+        if (hostNameEl) hostNameEl.textContent = `${myPlayerName} (Host)`;
+        if (hostAvatarEl) hostAvatarEl.textContent = myAvatar;
+        if (guestNameEl) guestNameEl.textContent = 'Waiting for Partner...';
+        if (guestAvatarEl) guestAvatarEl.textContent = '⏳';
+        if (guestStatus) {
+          guestStatus.textContent = 'NOT CONNECTED';
+          guestStatus.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800';
+        }
+        if (connectedActions) connectedActions.classList.add('hidden');
+
+        showView('viewRoomWaiting', false);
+        showToast(`Room ${code} is live! Share link with partner.`, '🚀');
+      } else {
+        broadcastRoomMessage('PEER_JOIN', { name: myPlayerName, avatar: myAvatar });
+        showToast(`Joined room ${code}! Syncing with partner...`, '💌');
+      }
+    }
+
+    function enterGameHubFromWaiting() {
+      broadcastRoomMessage('ENTER_HUB', {});
+      showView('viewHome', false);
+      updateNavRoomUI();
+      sound.success();
+    }
+
+    function updateNavRoomUI() {
+      const pill = document.getElementById('navRoomPill');
+      const dot = document.getElementById('navRoomStatusDot');
+      const codeText = document.getElementById('navRoomCodeText');
+      const exitBtn = document.getElementById('navRoomExitBtn');
+      const homeBar = document.getElementById('homeRoomStatusBar');
+      const homeCode = document.getElementById('homeRoomCodeBadge');
+      const homeDesc = document.getElementById('homeRoomConnectedDesc');
+
+      if (isLongDistanceMode && currentRoomCode) {
+        if (pill) { pill.classList.remove('hidden'); pill.classList.add('flex'); }
+        if (exitBtn) { exitBtn.classList.remove('hidden'); exitBtn.classList.add('flex'); }
+        if (codeText) {
+          codeText.textContent = isPartnerConnected 
+            ? `🟢 ${currentRoomCode} • ${partnerPlayerName}`
+            : `🟡 ${currentRoomCode} • Waiting...`;
+        }
+        if (dot) {
+          dot.className = isPartnerConnected 
+            ? 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse'
+            : 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
+        }
+        if (homeBar) homeBar.classList.remove('hidden');
+        if (homeCode) homeCode.textContent = currentRoomCode;
+        if (homeDesc) {
+          homeDesc.textContent = isPartnerConnected
+            ? `Playing live across distance with ${partnerPlayerName} (${partnerAvatar})`
+            : `Room active! Waiting for partner to connect with code ${currentRoomCode}`;
+        }
+      } else {
+        if (pill) { pill.classList.add('hidden'); pill.classList.remove('flex'); }
+        if (exitBtn) { exitBtn.classList.add('hidden'); exitBtn.classList.remove('flex'); }
+        if (homeBar) homeBar.classList.add('hidden');
+      }
+    }
+
+    function triggerFloatingLoveEmoji(emoji = '💖') {
+      const container = document.getElementById('floatingLoveEmojiContainer');
+      if (!container) return;
+
+      for (let i = 0; i < 7; i++) {
+        const span = document.createElement('span');
+        span.className = 'floating-heart text-3xl sm:text-4xl';
+        span.textContent = emoji;
+        span.style.left = `${15 + Math.random() * 70}%`;
+        span.style.bottom = '10%';
+        span.style.animationDuration = `${2 + Math.random() * 1.5}s`;
+        span.style.animationDelay = `${i * 0.15}s`;
+        container.appendChild(span);
+
+        setTimeout(() => {
+          if (span && span.parentNode) span.parentNode.removeChild(span);
+        }, 3500);
+      }
+    }
+
+    function handleIncomingNetworkMessage(data) {
+      const type = data.type;
+      const p = data.payload || {};
+
+      switch(type) {
+        case 'PEER_JOIN': {
+          isPartnerConnected = true;
+          partnerPlayerName = data.senderName || 'Partner';
+          partnerAvatar = data.senderAvatar || '💖';
+
+          const guestNameEl = document.getElementById('waitingGuestName');
+          const guestAvatarEl = document.getElementById('waitingGuestAvatar');
+          const guestStatus = document.getElementById('waitingGuestStatus');
+          const connectedActions = document.getElementById('waitingConnectedActions');
+          const statusBadge = document.getElementById('waitingRoomStatusBadge');
+
+          if (guestNameEl) guestNameEl.textContent = `${partnerPlayerName} (Connected)`;
+          if (guestAvatarEl) guestAvatarEl.textContent = partnerAvatar;
+          if (guestStatus) {
+            guestStatus.textContent = 'CONNECTED! ✓';
+            guestStatus.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+          }
+          if (statusBadge) {
+            statusBadge.textContent = 'PARTNER CONNECTED! READY';
+            statusBadge.parentElement.className = 'inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold';
+          }
+          if (connectedActions) connectedActions.classList.remove('hidden');
+
+          broadcastRoomMessage('PEER_ACK', {
+            hostName: myPlayerName,
+            hostAvatar: myAvatar,
+            heatLevel: state.heatLevel || 45
+          });
+
+          sound.celebrate();
+          launchConfetti();
+          showToast(`🎉 ${partnerPlayerName} has joined your room!`, '💖');
+          updateNavRoomUI();
+          break;
+        }
+
+        case 'PEER_ACK': {
+          isPartnerConnected = true;
+          partnerPlayerName = data.senderName || p.hostName || 'Shan';
+          partnerAvatar = data.senderAvatar || p.hostAvatar || '👑';
+          sound.celebrate();
+          launchConfetti();
+          updateNavRoomUI();
+          showToast(`Connected with ${partnerPlayerName}! Entering Game Hub!`, '🟢');
+          setTimeout(() => {
+            enterGameHubFromWaiting();
+          }, 800);
+          break;
+        }
+
+        case 'ENTER_HUB': {
+          enterGameHubFromWaiting();
+          break;
+        }
+
+        case 'NAVIGATE_VIEW': {
+          if (p.targetView) {
+            showView(p.targetView, false);
+            sound.tick();
+            showToast(`${partnerPlayerName} opened: ${p.targetViewTitle || 'game'}`, '🔄');
+          }
+          break;
+        }
+
+        case 'QUIZ_START': {
+          sound.tick();
+          currentQuizState.topic = TOPICS_DATA.find(t => t.id === p.topicId) || TOPICS_DATA[0];
+          currentQuizState.questionCount = p.qCount || 5;
+          currentQuizState.questions = p.questions || [];
+          currentQuizState.currentIndex = 0;
+          currentQuizState.phase = 1;
+          currentQuizState.starterName = p.starterName || partnerPlayerName;
+          currentQuizState.guesserName = p.guesserName || myPlayerName;
+          currentQuizState.p1Answers = {};
+          currentQuizState.p2Guesses = {};
+          currentQuizState.score = 0;
+
+          renderCurrentQuestion();
+          showView('viewQuizPlay', false);
+          showToast(`${currentQuizState.starterName} started: ${currentQuizState.topic.title}!`, '🎯');
+          break;
+        }
+
+        case 'QUIZ_P1_ANSWERED': {
+          sound.tick();
+          currentQuizState.p1Answers[p.qIndex] = p.answer;
+          if (currentQuizState.guesserName === myPlayerName) {
+            sound.seductionChime();
+            showToast(`${currentQuizState.starterName} locked their secret answer! Tap your guess!`, '🤔');
+            renderCurrentQuestion();
+          }
+          break;
+        }
+
+        case 'QUIZ_P2_GUESSED': {
+          currentQuizState.p2Guesses[p.qIndex] = p.guess;
+          const actual = currentQuizState.p1Answers[p.qIndex];
+          const isMatch = actual && (actual.trim().toLowerCase() === p.guess.trim().toLowerCase());
+
+          if (isMatch) {
+            currentQuizState.score++;
+            sound.success();
+            launchConfetti();
+          } else {
+            sound.miss();
+          }
+
+          renderQuizQuestionRevealStep(p.qIndex, actual, p.guess, isMatch);
+          break;
+        }
+
+        case 'QUIZ_NEXT_QUESTION': {
+          sound.tick();
+          currentQuizState.currentIndex = p.nextIndex;
+          renderCurrentQuestion();
+          break;
+        }
+
+        case 'WHEEL_SPIN': {
+          if (!romanceWheel.isSpinning) {
+            sound.tick();
+            romanceWheel.isSpinning = true;
+            romanceWheel.speed = p.speed || 0.45;
+            const animate = () => {
+              romanceWheel.currentAngle += romanceWheel.speed;
+              romanceWheel.speed *= romanceWheel.friction;
+              romanceWheel.drawWheel();
+              if (romanceWheel.speed > 0.002) {
+                requestAnimationFrame(animate);
+              } else {
+                romanceWheel.isSpinning = false;
+                romanceWheel.speed = 0;
+                romanceWheel.calculateLandedTopic();
+              }
+            };
+            requestAnimationFrame(animate);
+            showToast(`${partnerPlayerName} spun the Wheel of Romance! 🎡`, '✨');
+          }
+          break;
+        }
+
+        case 'TOD_DRAW': {
+          sound.tick();
+          const card = p.card;
+          const typeBadge = document.getElementById('todCardTypeBadge');
+          const spiceBadge = document.getElementById('todCardSpiceBadge');
+          const promptText = document.getElementById('todCardPromptText');
+          if (typeBadge) {
+            typeBadge.textContent = card.type.toUpperCase();
+            typeBadge.className = card.type === 'truth' ? 'px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-blue-500 text-white' : 'px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-rose-500 text-white';
+          }
+          if (spiceBadge) spiceBadge.textContent = `${card.level.toUpperCase()} (Drawn by ${data.senderName})`;
+          if (promptText) promptText.textContent = `"${card.text}"`;
+          showToast(`${data.senderName} drew a ${card.type.toUpperCase()} card!`, '🌶️');
+          break;
+        }
+
+        case 'TOD_HEARTBEAT_START': {
+          sound.playHeartbeat(74);
+          showToast(`💓 ${data.senderName} started the 60s Sensual Heartbeat!`, '🔥');
+          setTimeout(() => sound.stopHeartbeat(), 60000);
+          break;
+        }
+
+        case 'TOD_COMPLETED': {
+          sound.success();
+          state.todCompleted = (state.todCompleted || 0) + 1;
+          saveState();
+          const cEl = document.getElementById('todCompletedCount');
+          if (cEl) cEl.textContent = state.todCompleted;
+          showToast(`${data.senderName} completed the challenge! 🎉`, '✓');
+          break;
+        }
+
+        case 'WYR_VOTE': {
+          sound.tick();
+          handleIncomingWyrVote(p.choice, data.senderName);
+          break;
+        }
+
+        case 'DESIRE_SUBMIT': {
+          sound.tick();
+          if (p.voterRole === 1) {
+            desireMatcherState.p1Votes = p.votes || {};
+          } else {
+            desireMatcherState.p2Votes = p.votes || {};
+          }
+          checkAndTriggerOnlineDesireReveal();
+          break;
+        }
+
+        case 'LIE_QUESTION': {
+          sound.tick();
+          const qEl = document.getElementById('lieActiveQuestionText');
+          const catEl = document.getElementById('lieQuestionCategoryLabel');
+          if (qEl) qEl.textContent = `"${p.text}"`;
+          if (catEl) catEl.textContent = `CATEGORY: ${p.category || 'INTERROGATION'}`;
+          showToast(`🕵️‍♂️ ${data.senderName} put you in the Hot Seat with a question!`, '⚡');
+          break;
+        }
+
+        case 'LIE_VERDICT': {
+          revealPolygraphVerdict(p.bpm, p.tremor, p.verdictType, data.senderName);
+          break;
+        }
+
+        case 'NOTE_ADD': {
+          sound.success();
+          state.loveNotes.unshift(p.note);
+          saveState();
+          renderLoveNotes();
+          showToast(`💌 ${data.senderName} posted a new Love Note!`, '💖');
+          break;
+        }
+
+        case 'LOVE_PING': {
+          sound.seductionChime();
+          triggerFloatingLoveEmoji(p.emoji || '💖');
+          showToast(`${data.senderName} sent you: ${p.label || 'Love Ping'} ${p.emoji || '💖'}`, '💋');
+          break;
+        }
+
+        case 'VOUCHER_CLAIM': {
+          sound.celebrate();
+          launchConfetti();
+          const v = p.voucher;
+          state.loveNotes.unshift({
+            id: Date.now(),
+            text: `🎟️ ${data.senderName} REDEEMED BEDROOM TOKEN: "${v.title}" — ${v.desc}`,
+            color: 'amber',
+            date: 'Tonight'
+          });
+          saveState();
+          renderLoveNotes();
+          showToast(`🎟️ ${data.senderName} redeemed voucher "${v.title}"!`, '🔥');
+          break;
+        }
+
+        case 'HEAT_BOOST': {
+          state.heatLevel = p.heatLevel;
+          saveState();
+          updateHeatBarometerUI();
+          showToast(`Tension elevated by ${data.senderName}! Couple heat: ${state.heatLevel}% 🔥`, '✨');
+          break;
+        }
+
+        case 'LEAVE_ROOM': {
+          isPartnerConnected = false;
+          updateNavRoomUI();
+          showToast(`${data.senderName} left the room.`, '🚪');
+          break;
+        }
+      }
+    }
+
     let currentQuizState = {
       topic: null,
       questionCount: 5,
@@ -2971,8 +3744,64 @@
       currentQuizState.p2Guesses = {};
       currentQuizState.score = 0;
 
+      if (isLongDistanceMode && currentRoomCode) {
+        broadcastRoomMessage('QUIZ_START', {
+          topicId: topic.id,
+          qCount: currentQuizState.questionCount,
+          questions: currentQuizState.questions,
+          starterName: currentQuizState.starterName,
+          guesserName: currentQuizState.guesserName
+        });
+      }
+
       renderCurrentQuestion();
-      showView('viewQuizPlay');
+      showView('viewQuizPlay', false);
+    }
+
+    function renderQuizQuestionRevealStep(qIndex, actual, guess, isMatch) {
+      const q = currentQuizState.questions[qIndex];
+      const total = currentQuizState.questions.length;
+      const cur = qIndex + 1;
+      const optionsContainer = document.getElementById('quizOptionsContainer');
+      const promptHeader = document.getElementById('quizPromptHeader');
+
+      if (promptHeader) {
+        promptHeader.innerHTML = `<span class="font-extrabold ${isMatch ? 'text-emerald-700' : 'text-rose-700'}">${isMatch ? '🎉 MATCH! (+1 Point)' : '😅 HILARIOUS MISS!'}</span>`;
+      }
+
+      if (optionsContainer) {
+        const isLast = (qIndex >= total - 1);
+        optionsContainer.innerHTML = `
+          <div class="p-5 rounded-2xl border-2 ${isMatch ? 'border-emerald-300 bg-emerald-50/70' : 'border-rose-300 bg-rose-50/70'} space-y-3 animate-scaleUp">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 rounded-xl bg-white border border-slate-200">
+                <span class="text-slate-400 font-bold block">${currentQuizState.starterName}'s Honest Choice:</span>
+                <span class="font-extrabold text-slate-800 text-sm">${actual || 'No answer'}</span>
+              </div>
+              <div class="p-3 rounded-xl bg-white border border-slate-200">
+                <span class="text-slate-400 font-bold block">${currentQuizState.guesserName}'s Guess:</span>
+                <span class="font-extrabold ${isMatch ? 'text-emerald-700' : 'text-rose-700'} text-sm">${guess || 'No guess'}</span>
+              </div>
+            </div>
+            <button id="quizNextStepBtn" class="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5 active:scale-95">
+              <span>${isLast ? 'View Grand Compatibility Reveal 🏆 →' : `Next Question (Q${cur + 1} of ${total}) →`}</span>
+            </button>
+          </div>
+        `;
+
+        document.getElementById('quizNextStepBtn').addEventListener('click', () => {
+          sound.tick();
+          if (isLast) {
+            broadcastRoomMessage('QUIZ_FINISH', {});
+            showGrandReveal();
+          } else {
+            const nextIdx = qIndex + 1;
+            broadcastRoomMessage('QUIZ_NEXT_QUESTION', { nextIndex: nextIdx });
+            currentQuizState.currentIndex = nextIdx;
+            renderCurrentQuestion();
+          }
+        });
+      }
     }
 
     function renderCurrentQuestion() {
@@ -3040,10 +3869,31 @@
         }
       }
 
+      // Check if playing in Long Distance Online Mode
+      const isOnline = isLongDistanceMode && currentRoomCode;
+      const isMyTurnToAnswer = isOnline 
+        ? (currentQuizState.phase === 1 && currentQuizState.starterName === myPlayerName) ||
+          (currentQuizState.phase === 2 && currentQuizState.guesserName === myPlayerName)
+        : true;
+
       // Render Options
       const optionsContainer = document.getElementById('quizOptionsContainer');
       if (!optionsContainer) return;
       optionsContainer.innerHTML = '';
+
+      if (isOnline && !isMyTurnToAnswer) {
+        // Partner is currently answering or guessing
+        const waitingForName = currentQuizState.phase === 1 ? currentQuizState.starterName : currentQuizState.guesserName;
+        const waitingAction = currentQuizState.phase === 1 ? "locking their secret honest answer" : "guessing what you chose";
+        optionsContainer.innerHTML = `
+          <div class="p-6 rounded-2xl bg-amber-50/80 border-2 border-dashed border-amber-300 text-center space-y-2 animate-pulse">
+            <span class="text-3xl">⏳</span>
+            <h4 class="font-bold text-amber-900 text-base">${waitingForName} is currently ${waitingAction}...</h4>
+            <p class="text-xs text-amber-700">Options will automatically unlock for you the second they choose!</p>
+          </div>
+        `;
+        return;
+      }
 
       q.options.forEach((optText, optIdx) => {
         const optBtn = document.createElement('button');
@@ -3075,40 +3925,82 @@
     function handleOptionSelected(chosenText) {
       sound.tick();
       const idx = currentQuizState.currentIndex;
+      const isOnline = isLongDistanceMode && currentRoomCode;
 
-      if (currentQuizState.phase === 1) {
-        currentQuizState.p1Answers[idx] = chosenText;
-        if (currentQuizState.currentIndex < currentQuizState.questions.length - 1) {
-          currentQuizState.currentIndex++;
-          renderCurrentQuestion();
+      if (isOnline) {
+        // --- LONG DISTANCE ONLINE TURN HANDLING (NO PASS AND PLAY) ---
+        if (currentQuizState.phase === 1) {
+          // Starter locks their answer
+          currentQuizState.p1Answers[idx] = chosenText;
+          broadcastRoomMessage('QUIZ_P1_ANSWERED', { qIndex: idx, answer: chosenText });
+          currentQuizState.phase = 2; // Switch to guessing phase for this question!
+
+          // Show confirmation on starter's screen
+          const optionsContainer = document.getElementById('quizOptionsContainer');
+          const promptHeader = document.getElementById('quizPromptHeader');
+          if (promptHeader) {
+            promptHeader.innerHTML = `<span class="text-xs font-bold text-emerald-700">✓ Your answer is locked in secret!</span>`;
+          }
+          if (optionsContainer) {
+            optionsContainer.innerHTML = `
+              <div class="p-6 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-center space-y-2">
+                <span class="text-3xl">🔒</span>
+                <h4 class="font-bold text-emerald-900 text-base">You picked: "${chosenText}"</h4>
+                <p class="text-xs text-emerald-700">Waiting for ${currentQuizState.guesserName} to guess from their phone...</p>
+              </div>
+            `;
+          }
+          showToast(`Choice locked! Waiting for ${currentQuizState.guesserName} to guess...`, '🔒');
         } else {
-          // Finished Phase 1 -> Show Handoff Screen!
-          showHandoffScreen();
+          // Guesser makes their guess
+          currentQuizState.p2Guesses[idx] = chosenText;
+          broadcastRoomMessage('QUIZ_P2_GUESSED', { qIndex: idx, guess: chosenText });
+          currentQuizState.phase = 1; // Reset phase for next question
+
+          const actual = currentQuizState.p1Answers[idx];
+          const isMatch = actual && (actual.trim().toLowerCase() === chosenText.trim().toLowerCase());
+          if (isMatch) {
+            currentQuizState.score++;
+            sound.success();
+            launchConfetti();
+          } else {
+            sound.miss();
+          }
+          renderQuizQuestionRevealStep(idx, actual, chosenText, isMatch);
         }
       } else {
-        // Phase 2: Guesser
-        currentQuizState.p2Guesses[idx] = chosenText;
-        const correctChoice = currentQuizState.p1Answers[idx];
-        const isMatch = chosenText.trim().toLowerCase() === correctChoice.trim().toLowerCase();
-
-        if (isMatch) {
-          currentQuizState.score++;
-          sound.success();
-          showToast(`Match! ${currentQuizState.starterName} indeed chose that!`, '💖');
-        } else {
-          sound.miss();
-          showToast(`Hilarious miss! Actual answer was different.`, '😅');
-        }
-
-        setTimeout(() => {
+        // --- OFFLINE PASS & PLAY FALLBACK ---
+        if (currentQuizState.phase === 1) {
+          currentQuizState.p1Answers[idx] = chosenText;
           if (currentQuizState.currentIndex < currentQuizState.questions.length - 1) {
             currentQuizState.currentIndex++;
             renderCurrentQuestion();
           } else {
-            // Finished Phase 2 -> Show Grand Reveal!
-            showGrandReveal();
+            showHandoffScreen();
           }
-        }, 500);
+        } else {
+          currentQuizState.p2Guesses[idx] = chosenText;
+          const correctChoice = currentQuizState.p1Answers[idx];
+          const isMatch = correctChoice && (chosenText.trim().toLowerCase() === correctChoice.trim().toLowerCase());
+
+          if (isMatch) {
+            currentQuizState.score++;
+            sound.success();
+            showToast(`Match! ${currentQuizState.starterName} indeed chose that!`, '💖');
+          } else {
+            sound.miss();
+            showToast(`Hilarious miss! Actual answer was different.`, '😅');
+          }
+
+          setTimeout(() => {
+            if (currentQuizState.currentIndex < currentQuizState.questions.length - 1) {
+              currentQuizState.currentIndex++;
+              renderCurrentQuestion();
+            } else {
+              showGrandReveal();
+            }
+          }, 500);
+        }
       }
     }
 
@@ -3283,6 +4175,9 @@
         sound.tick();
         this.isSpinning = true;
         this.speed = 0.35 + Math.random() * 0.25; // initial angular velocity
+        if (isLongDistanceMode && currentRoomCode) {
+          broadcastRoomMessage('WHEEL_SPIN', { speed: this.speed });
+        }
         let lastTickAngle = this.currentAngle;
 
         const animate = () => {
@@ -3361,7 +4256,7 @@
     let todCurrentLevel = 'all';
     let todCurrentIndex = 0;
 
-    function renderTodCard(type = 'random') {
+    function renderTodCard(type = 'random', shouldBroadcast = true) {
       sound.tick();
       let pool = TOD_DATA;
 
@@ -3393,6 +4288,9 @@
 
       if (promptText) {
         promptText.textContent = `"${card.text}"`;
+      }
+      if (shouldBroadcast && isLongDistanceMode && currentRoomCode) {
+        broadcastRoomMessage('TOD_DRAW', { card: card });
       }
 
       if (cardBox) {
@@ -3968,14 +4866,30 @@
       });
     }
 
+    function checkAndTriggerOnlineDesireReveal() {
+      const p1HasVotes = Object.keys(desireMatcherState.p1Votes).length > 0;
+      const p2HasVotes = Object.keys(desireMatcherState.p2Votes).length > 0;
+      if (p1HasVotes && p2HasVotes) {
+        calculateAndRevealDesireMatches();
+      }
+    }
+
     function submitP1Desires() {
       sound.tick();
-      // Ensure any unselected default to pass
       DESIRES_DATABASE.forEach(d => {
         if (!desireMatcherState.p1Votes[d.id]) {
           desireMatcherState.p1Votes[d.id] = 'pass';
         }
       });
+
+      if (isLongDistanceMode && currentRoomCode) {
+        broadcastRoomMessage('DESIRE_SUBMIT', { voterRole: 1, votes: desireMatcherState.p1Votes });
+        document.getElementById('desireVotingSection').classList.add('hidden');
+        document.getElementById('submitDesireP1Btn').classList.add('hidden');
+        showToast('Your choices are locked in secret! Waiting for partner...', '🔒');
+        checkAndTriggerOnlineDesireReveal();
+        return;
+      }
 
       // Transition to handoff
       document.getElementById('desireVotingSection').classList.add('hidden');
@@ -4096,6 +5010,213 @@
       romanceWheel.init();
       renderLoveNotes();
       renderCustomStudio();
+
+      // Check URL parameters for ?room=CODE invite link
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomParam = urlParams.get('room');
+      if (roomParam) {
+        const joinIn = document.getElementById('lobbyJoinCodeInput');
+        if (joinIn) {
+          joinIn.value = roomParam.trim().toUpperCase();
+        }
+        showToast(`Room invite detected: ${roomParam}! Enter your nickname and tap Connect!`, '💌');
+      }
+
+      // Default start on viewLobby (matches Image 1) so user can Create or Join Room!
+      showView('viewLobby', false);
+
+      // --- LOBBY BUTTONS ---
+      const createCodeInput = document.getElementById('lobbyCreateCodeInput');
+      const randomizeCodeBtn = document.getElementById('lobbyRandomizeCodeBtn');
+      if (randomizeCodeBtn && createCodeInput) {
+        randomizeCodeBtn.addEventListener('click', () => {
+          createCodeInput.value = generateRomanticRoomCode();
+          sound.tick();
+        });
+      }
+
+      document.querySelectorAll('.lobbyAvatarBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.lobbyAvatarBtn').forEach(b => {
+            b.classList.remove('border-rose-500', 'bg-rose-50');
+            b.classList.add('border-slate-200');
+          });
+          btn.classList.add('border-rose-500', 'bg-rose-50');
+          btn.classList.remove('border-slate-200');
+          myAvatar = btn.getAttribute('data-avatar') || '👑';
+          sound.tick();
+        });
+      });
+
+      const createRoomBtn = document.getElementById('lobbyCreateRoomBtn');
+      if (createRoomBtn) {
+        createRoomBtn.addEventListener('click', () => {
+          const name = document.getElementById('lobbyCreateNameInput').value.trim() || 'Shan';
+          const code = document.getElementById('lobbyCreateCodeInput').value.trim() || generateRomanticRoomCode();
+          connectToOnlineRoom(code, true, name, myAvatar);
+        });
+      }
+
+      const joinRoomBtn = document.getElementById('lobbyJoinRoomBtn');
+      if (joinRoomBtn) {
+        joinRoomBtn.addEventListener('click', () => {
+          const name = document.getElementById('lobbyJoinNameInput').value.trim() || 'Partner';
+          const code = document.getElementById('lobbyJoinCodeInput').value.trim();
+          if (!code) {
+            showToast('Please enter the Room Code shared by your partner', '⚠️');
+            return;
+          }
+          connectToOnlineRoom(code, false, name, '💖');
+        });
+      }
+
+      const passPlayBtn = document.getElementById('lobbyPassAndPlayBtn');
+      if (passPlayBtn) {
+        passPlayBtn.addEventListener('click', () => {
+          sound.tick();
+          isLongDistanceMode = false;
+          currentRoomCode = null;
+          updateNavRoomUI();
+          showView('viewHome', false);
+          showToast('Entered Single Phone Pass & Play mode!', '📱');
+        });
+      }
+
+      // --- ROOM WAITING ACTIONS ---
+      const waitCopyLinkBtn = document.getElementById('waitingCopyLinkBtn');
+      if (waitCopyLinkBtn) {
+        waitCopyLinkBtn.addEventListener('click', () => {
+          const url = getInviteUrl(currentRoomCode || 'LOVE-482');
+          navigator.clipboard.writeText(url).then(() => {
+            sound.success();
+            showToast('Direct invite link copied to clipboard! Send to partner! 📋', '✨');
+          }).catch(() => {
+            showToast(url, '🔗');
+          });
+        });
+      }
+
+      const waitShareWaBtn = document.getElementById('waitingShareWhatsappBtn');
+      if (waitShareWaBtn) {
+        waitShareWaBtn.addEventListener('click', () => {
+          const url = getInviteUrl(currentRoomCode || 'LOVE-482');
+          const msg = `Hey love! Connect with me on our private Shan Couple Games room! Click here to join: ${url}`;
+          window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+          showToast('Opened WhatsApp invite!', '💬');
+        });
+      }
+
+      const waitCopyCodeBtn = document.getElementById('waitingCopyCodeBtn');
+      if (waitCopyCodeBtn) {
+        waitCopyCodeBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(currentRoomCode || 'LOVE-482').then(() => {
+            sound.success();
+            showToast('Room Code copied to clipboard! 📋', '✨');
+          });
+        });
+      }
+
+      const waitEnterHubBtn = document.getElementById('waitingEnterHubBtn');
+      if (waitEnterHubBtn) {
+        waitEnterHubBtn.addEventListener('click', enterGameHubFromWaiting);
+      }
+
+      const waitCancelBtn = document.getElementById('waitingCancelRoomBtn');
+      if (waitCancelBtn) {
+        waitCancelBtn.addEventListener('click', () => {
+          if (mqttClient) {
+            broadcastRoomMessage('LEAVE_ROOM', {});
+            try { mqttClient.end(true); } catch(e){}
+          }
+          isLongDistanceMode = false;
+          currentRoomCode = null;
+          updateNavRoomUI();
+          showView('viewLobby', false);
+          showToast('Left room. Returned to lobby.', '🚪');
+        });
+      }
+
+      // --- NAV ROOM PILL & LOVE PING CONTROLS ---
+      const copyNavRoomBtn = document.getElementById('navCopyRoomLinkBtn');
+      if (copyNavRoomBtn) {
+        copyNavRoomBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const url = getInviteUrl(currentRoomCode || 'LOVE-482');
+          navigator.clipboard.writeText(url).then(() => {
+            sound.success();
+            showToast('Room invite link copied! 📋', '✨');
+          });
+        });
+      }
+
+      const navRoomPillEl = document.getElementById('navRoomPill');
+      if (navRoomPillEl) {
+        navRoomPillEl.addEventListener('click', () => {
+          if (currentRoomCode) {
+            const url = getInviteUrl(currentRoomCode);
+            navigator.clipboard.writeText(url).then(() => {
+              showToast(`Room: ${currentRoomCode} (Link copied!)`, '📋');
+            });
+          }
+        });
+      }
+
+      const navExitBtn = document.getElementById('navRoomExitBtn');
+      if (navExitBtn) {
+        navExitBtn.addEventListener('click', () => {
+          broadcastRoomMessage('LEAVE_ROOM', {});
+          if (mqttClient) try { mqttClient.end(true); } catch(e){}
+          isLongDistanceMode = false;
+          currentRoomCode = null;
+          updateNavRoomUI();
+          showView('viewLobby', false);
+          showToast('Returned to room selector', '🚪');
+        });
+      }
+
+      // Live Love Ping Tray
+      const navLovePingBtn = document.getElementById('navSendLovePingBtn');
+      const homeLovePingBtn = document.getElementById('homePingPartnerBtn');
+      const closeLovePingBtn = document.getElementById('closeLovePingModalBtn');
+      const lovePingModal = document.getElementById('lovePingModal');
+
+      if (navLovePingBtn) navLovePingBtn.addEventListener('click', () => lovePingModal.classList.remove('hidden'));
+      if (homeLovePingBtn) homeLovePingBtn.addEventListener('click', () => lovePingModal.classList.remove('hidden'));
+      if (closeLovePingBtn) closeLovePingBtn.addEventListener('click', () => lovePingModal.classList.add('hidden'));
+
+      document.querySelectorAll('.lovePingActionBtn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const emoji = btn.getAttribute('data-emoji') || '💖';
+          const label = btn.getAttribute('data-label') || 'Sent love!';
+          sound.seductionChime();
+          triggerFloatingLoveEmoji(emoji);
+          broadcastRoomMessage('LOVE_PING', { emoji: emoji, label: label });
+          lovePingModal.classList.add('hidden');
+          showToast(`Sent ${emoji} to ${partnerPlayerName}!`, '💖');
+        });
+      });
+
+      const quickMissYouBtn = document.getElementById('lovePingQuickMissYouBtn');
+      if (quickMissYouBtn) {
+        quickMissYouBtn.addEventListener('click', () => {
+          sound.seductionChime();
+          triggerFloatingLoveEmoji('💌');
+          broadcastRoomMessage('LOVE_PING', { emoji: '💌', label: 'I Miss You & Love You So Much!' });
+          lovePingModal.classList.add('hidden');
+          showToast(`Sent "I Miss You" to ${partnerPlayerName}!`, '💖');
+        });
+      }
+
+      const homeCopyRoomLinkBtn = document.getElementById('homeCopyRoomLinkBtn');
+      if (homeCopyRoomLinkBtn) {
+        homeCopyRoomLinkBtn.addEventListener('click', () => {
+          const url = getInviteUrl(currentRoomCode || 'LOVE-482');
+          navigator.clipboard.writeText(url).then(() => {
+            sound.success();
+            showToast('Room link copied! 📋', '✨');
+          });
+        });
+      }
 
       // Navigation Bar
       document.getElementById('navLogoBtn').addEventListener('click', () => showView('viewHome'));
@@ -4314,23 +5435,77 @@
         });
       });
 
+      function handleWyrVote(choice) {
+        sound.success();
+        const btnA = document.getElementById('wyrOptionABtn');
+        const btnB = document.getElementById('wyrOptionBBtn');
+        const voteA = document.getElementById('wyrOptionAVotes');
+        const voteB = document.getElementById('wyrOptionBVotes');
+
+        if (choice === 'a') {
+          btnA.classList.add('border-blue-500', 'bg-blue-50');
+          btnB.classList.remove('border-rose-500', 'bg-rose-50');
+          voteA.classList.remove('hidden');
+          voteA.textContent = `${myPlayerName}: Picked A!`;
+          voteB.classList.add('hidden');
+        } else {
+          btnB.classList.add('border-rose-500', 'bg-rose-50');
+          btnA.classList.remove('border-blue-500', 'bg-blue-50');
+          voteB.classList.remove('hidden');
+          voteB.textContent = `${myPlayerName}: Picked B!`;
+          voteA.classList.add('hidden');
+        }
+
+        if (isLongDistanceMode && currentRoomCode) {
+          wyrLocalVote = choice;
+          broadcastRoomMessage('WYR_VOTE', { choice: choice });
+          if (!wyrPartnerVote) {
+            showToast(`You voted for Option ${choice.toUpperCase()}! Waiting for ${partnerPlayerName}...`, '🗳️');
+          } else {
+            revealWyrMatch();
+          }
+        } else {
+          showToast(`Voted for Option ${choice.toUpperCase()}!`, '🗳️');
+        }
+      }
+
+      function handleIncomingWyrVote(partnerChoice, partnerName) {
+        wyrPartnerVote = partnerChoice;
+        if (wyrLocalVote) {
+          revealWyrMatch();
+        } else {
+          showToast(`${partnerName} has voted! Select your choice to reveal!`, '🤔');
+        }
+      }
+
+      function revealWyrMatch() {
+        sound.seductionChime();
+        const voteA = document.getElementById('wyrOptionAVotes');
+        const voteB = document.getElementById('wyrOptionBVotes');
+        const isMatch = wyrLocalVote === wyrPartnerVote;
+
+        if (isMatch) {
+          sound.celebrate();
+          launchConfetti();
+          showToast(`🎉 100% ALIGNED! Both picked Option ${wyrLocalVote.toUpperCase()}!`, '💖');
+        } else {
+          sound.miss();
+          showToast(`Opposites attract! ${myPlayerName} picked ${wyrLocalVote.toUpperCase()}, ${partnerPlayerName} picked ${wyrPartnerVote.toUpperCase()}!`, '😅');
+        }
+
+        if (voteA) {
+          voteA.classList.remove('hidden');
+          voteA.textContent = (wyrLocalVote === 'a' ? `${myPlayerName} ` : '') + (wyrPartnerVote === 'a' ? `${partnerPlayerName}` : '');
+        }
+        if (voteB) {
+          voteB.classList.remove('hidden');
+          voteB.textContent = (wyrLocalVote === 'b' ? `${myPlayerName} ` : '') + (wyrPartnerVote === 'b' ? `${partnerPlayerName}` : '');
+        }
+      }
+
       // Would you rather controls
-      document.getElementById('wyrOptionABtn').addEventListener('click', () => {
-        sound.success();
-        document.getElementById('wyrOptionABtn').classList.add('border-blue-500', 'bg-blue-50');
-        document.getElementById('wyrOptionBBtn').classList.remove('border-rose-500', 'bg-rose-50');
-        document.getElementById('wyrOptionAVotes').classList.remove('hidden');
-        document.getElementById('wyrOptionBVotes').classList.add('hidden');
-        showToast('Voted for Option A!', '🗳️');
-      });
-      document.getElementById('wyrOptionBBtn').addEventListener('click', () => {
-        sound.success();
-        document.getElementById('wyrOptionBBtn').classList.add('border-rose-500', 'bg-rose-50');
-        document.getElementById('wyrOptionABtn').classList.remove('border-blue-500', 'bg-blue-50');
-        document.getElementById('wyrOptionBVotes').classList.remove('hidden');
-        document.getElementById('wyrOptionAVotes').classList.add('hidden');
-        showToast('Voted for Option B!', '🗳️');
-      });
+      document.getElementById('wyrOptionABtn').addEventListener('click', () => handleWyrVote('a'));
+      document.getElementById('wyrOptionBBtn').addEventListener('click', () => handleWyrVote('b'));
       document.getElementById('wyrNextBtn').addEventListener('click', () => {
         wyrIndex++;
         renderWyrDilemma();
