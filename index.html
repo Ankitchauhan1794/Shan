@@ -3315,16 +3315,16 @@
         broadcastRoomMessage('HEARTBEAT_PING', { name: myPlayerName });
       }, 10000);
 
-      if (isHost) {
-        const codeDisplay = document.getElementById('waitingRoomCodeDisplay');
-        const hostNameEl = document.getElementById('waitingHostName');
-        const hostAvatarEl = document.getElementById('waitingHostAvatar');
-        const guestNameEl = document.getElementById('waitingGuestName');
-        const guestAvatarEl = document.getElementById('waitingGuestAvatar');
-        const guestStatus = document.getElementById('waitingGuestStatus');
-        const connectedActions = document.getElementById('waitingConnectedActions');
+      const codeDisplay = document.getElementById('waitingRoomCodeDisplay');
+      const hostNameEl = document.getElementById('waitingHostName');
+      const hostAvatarEl = document.getElementById('waitingHostAvatar');
+      const guestNameEl = document.getElementById('waitingGuestName');
+      const guestAvatarEl = document.getElementById('waitingGuestAvatar');
+      const guestStatus = document.getElementById('waitingGuestStatus');
+      const connectedActions = document.getElementById('waitingConnectedActions');
+      if (codeDisplay) codeDisplay.textContent = code;
 
-        if (codeDisplay) codeDisplay.textContent = code;
+      if (isHost) {
         if (hostNameEl) hostNameEl.textContent = `${myPlayerName} (Host)`;
         if (hostAvatarEl) hostAvatarEl.textContent = myAvatar;
         if (guestNameEl) guestNameEl.textContent = 'Waiting for Partner...';
@@ -3338,6 +3338,16 @@
         showView('viewRoomWaiting', false);
         showToast(`Room ${code} is live! Share link with partner.`, '🚀');
       } else {
+        if (hostNameEl) hostNameEl.textContent = 'Connecting to Host...';
+        if (hostAvatarEl) hostAvatarEl.textContent = '👑';
+        if (guestNameEl) guestNameEl.textContent = `${myPlayerName} (You)`;
+        if (guestAvatarEl) guestAvatarEl.textContent = myAvatar;
+        if (guestStatus) {
+          guestStatus.textContent = 'JOINING ROOM...';
+          guestStatus.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800';
+        }
+        if (connectedActions) connectedActions.classList.remove('hidden');
+        showView('viewRoomWaiting', false);
         broadcastRoomMessage('PEER_JOIN', { name: myPlayerName, avatar: myAvatar });
         showToast(`Joined room ${code}! Syncing with partner...`, '💌');
       }
@@ -3411,10 +3421,36 @@
       const p = data.payload || {};
 
       switch(type) {
+        case 'HEARTBEAT_PING': {
+          if (!isPartnerConnected) {
+            isPartnerConnected = true;
+            partnerPlayerName = data.senderName || p.name || 'Partner';
+            partnerAvatar = data.senderAvatar || '💖';
+            if (isHost) {
+              state.partner1 = myPlayerName;
+              state.partner2 = partnerPlayerName;
+            } else {
+              state.partner1 = partnerPlayerName;
+              state.partner2 = myPlayerName;
+            }
+            saveState();
+            updateNavRoomUI();
+            broadcastRoomMessage('PEER_ACK', {
+              hostName: myPlayerName,
+              hostAvatar: myAvatar,
+              heatLevel: state.heatLevel || 45
+            });
+          }
+          break;
+        }
+
         case 'PEER_JOIN': {
           isPartnerConnected = true;
-          partnerPlayerName = data.senderName || 'Partner';
-          partnerAvatar = data.senderAvatar || '💖';
+          partnerPlayerName = data.senderName || p.name || 'Partner';
+          partnerAvatar = data.senderAvatar || p.avatar || '💖';
+          state.partner1 = myPlayerName;
+          state.partner2 = partnerPlayerName;
+          saveState();
 
           const guestNameEl = document.getElementById('waitingGuestName');
           const guestAvatarEl = document.getElementById('waitingGuestAvatar');
@@ -3448,30 +3484,60 @@
         }
 
         case 'PEER_ACK': {
+          const wasConnected = isPartnerConnected;
           isPartnerConnected = true;
           partnerPlayerName = data.senderName || p.hostName || 'Shan';
           partnerAvatar = data.senderAvatar || p.hostAvatar || '👑';
-          sound.celebrate();
-          launchConfetti();
+          if (isHost) {
+            state.partner1 = myPlayerName;
+            state.partner2 = partnerPlayerName;
+          } else {
+            state.partner1 = partnerPlayerName;
+            state.partner2 = myPlayerName;
+          }
+          saveState();
           updateNavRoomUI();
-          showToast(`Connected with ${partnerPlayerName}! Entering Game Hub!`, '🟢');
-          setTimeout(() => {
-            enterGameHubFromWaiting();
-          }, 800);
+          if (!wasConnected) {
+            sound.celebrate();
+            launchConfetti();
+            showToast(`Connected with ${partnerPlayerName}! Entering Game Hub!`, '🟢');
+            if (!document.getElementById('viewRoomWaiting').classList.contains('hidden')) {
+              setTimeout(() => {
+                enterGameHubFromWaiting();
+              }, 600);
+            }
+          }
           break;
         }
 
         case 'ENTER_HUB': {
-          enterGameHubFromWaiting();
+          showView('viewHome', false);
+          updateNavRoomUI();
+          sound.success();
           break;
         }
 
         case 'NAVIGATE_VIEW': {
           if (p.targetView) {
             showView(p.targetView, false);
+            if (p.targetView === 'viewWheel') romanceWheel.drawWheel();
+            if (p.targetView === 'viewWouldRather') renderWyrDilemma(false);
+            if (p.targetView === 'viewDesireMatcher') startDesireMatcher(false);
+            if (p.targetView === 'viewLieDetector') startPolygraphWaveform();
             sound.tick();
             showToast(`${partnerPlayerName} opened: ${p.targetViewTitle || 'game'}`, '🔄');
           }
+          break;
+        }
+
+        case 'QUIZ_STARTER_SWAP': {
+          currentQuizState.starterName = p.starterName;
+          currentQuizState.guesserName = p.guesserName;
+          const p1El = document.getElementById('quizPlayer1Name');
+          const p2El = document.getElementById('quizPlayer2Name');
+          if (p1El) p1El.textContent = currentQuizState.starterName;
+          if (p2El) p2El.textContent = currentQuizState.guesserName;
+          showToast(`Starter switched to ${currentQuizState.starterName}!`, '🔄');
           break;
         }
 
@@ -3497,16 +3563,18 @@
         case 'QUIZ_P1_ANSWERED': {
           sound.tick();
           currentQuizState.p1Answers[p.qIndex] = p.answer;
+          currentQuizState.phase = 2;
           if (currentQuizState.guesserName === myPlayerName) {
             sound.seductionChime();
             showToast(`${currentQuizState.starterName} locked their secret answer! Tap your guess!`, '🤔');
-            renderCurrentQuestion();
           }
+          renderCurrentQuestion();
           break;
         }
 
         case 'QUIZ_P2_GUESSED': {
           currentQuizState.p2Guesses[p.qIndex] = p.guess;
+          currentQuizState.phase = 1;
           const actual = currentQuizState.p1Answers[p.qIndex];
           const isMatch = actual && (actual.trim().toLowerCase() === p.guess.trim().toLowerCase());
 
@@ -3525,7 +3593,32 @@
         case 'QUIZ_NEXT_QUESTION': {
           sound.tick();
           currentQuizState.currentIndex = p.nextIndex;
+          currentQuizState.phase = 1;
           renderCurrentQuestion();
+          break;
+        }
+
+        case 'QUIZ_FINISH': {
+          showGrandReveal();
+          break;
+        }
+
+        case 'WYR_NEXT': {
+          wyrIndex = p.wyrIndex;
+          if (p.category) wyrCurrentCategory = p.category;
+          renderWyrDilemma(false);
+          break;
+        }
+
+        case 'SEDUCTION_SPIN': {
+          sound.seductionChime();
+          const actEl = document.getElementById('seductionReelAction');
+          const zoneEl = document.getElementById('seductionReelZone');
+          const ruleEl = document.getElementById('seductionReelRule');
+          if (actEl && p.action) actEl.textContent = p.action;
+          if (zoneEl && p.zone) zoneEl.textContent = p.zone;
+          if (ruleEl && p.rule) ruleEl.textContent = p.rule;
+          showToast(`🎲 ${data.senderName} spun the 3-Reel Seduction Slot!`, '👑');
           break;
         }
 
@@ -3613,7 +3706,7 @@
         }
 
         case 'LIE_VERDICT': {
-          revealPolygraphVerdict(p.bpm, p.tremor, p.verdictType, data.senderName);
+          revealPolygraphVerdict(p.bpm, p.tremor, p.verdictType, true);
           break;
         }
 
@@ -3719,8 +3812,13 @@
 
     function startQuizSetup() {
       populateTopicGrid();
-      currentQuizState.starterName = state.partner1;
-      currentQuizState.guesserName = state.partner2;
+      if (isLongDistanceMode && currentRoomCode) {
+        currentQuizState.starterName = isHost ? myPlayerName : partnerPlayerName;
+        currentQuizState.guesserName = isHost ? partnerPlayerName : myPlayerName;
+      } else {
+        currentQuizState.starterName = state.partner1;
+        currentQuizState.guesserName = state.partner2;
+      }
 
       const p1El = document.getElementById('quizPlayer1Name');
       const p2El = document.getElementById('quizPlayer2Name');
@@ -4593,6 +4691,9 @@
       state.heatLevel = Math.min(100, prev + amount);
       saveState();
       updateHeatBarometerUI();
+      if (isLongDistanceMode && currentRoomCode) {
+        broadcastRoomMessage('HEAT_BOOST', { heatLevel: state.heatLevel });
+      }
 
       if (state.heatLevel >= 85 && prev < 85) {
         sound.seductionChime();
@@ -4631,6 +4732,13 @@
           seductionSpinning = false;
           sound.seductionChime();
           launchConfetti();
+          if (isLongDistanceMode && currentRoomCode) {
+            broadcastRoomMessage('SEDUCTION_SPIN', {
+              action: actEl ? actEl.textContent : '',
+              zone: zoneEl ? zoneEl.textContent : '',
+              rule: ruleEl ? ruleEl.textContent : ''
+            });
+          }
           boostHeatLevel(10);
           showToast("New Seduction Challenge Landed! 🎲🔥", "👑");
         }
@@ -4753,6 +4861,9 @@
       saveState();
       renderLoveNotes();
 
+      if (isLongDistanceMode && currentRoomCode) {
+        broadcastRoomMessage('VOUCHER_CLAIM', { voucher: voucher, voucherNum: voucherNum });
+      }
       boostHeatLevel(20);
       showToast(`Token "${voucher.title}" redeemed and pinned to your Love Wall!`, '🎟️');
     }
@@ -4765,9 +4876,10 @@
       matches: []
     };
 
-    function startDesireMatcher() {
+    function startDesireMatcher(shouldBroadcast = true) {
       sound.tick();
-      desireMatcherState.activePlayer = 1;
+      const isOnline = isLongDistanceMode && currentRoomCode;
+      desireMatcherState.activePlayer = isOnline ? (isHost ? 1 : 2) : 1;
       desireMatcherState.p1Votes = {};
       desireMatcherState.p2Votes = {};
       desireMatcherState.matches = [];
@@ -4784,8 +4896,17 @@
 
       if (p1El) p1El.textContent = state.partner1;
       if (p2El) p2El.textContent = state.partner2;
-      if (activeName) activeName.textContent = state.partner1;
-      if (phaseBadge) phaseBadge.textContent = `Step 1: ${state.partner1} Votes Privately`;
+      if (activeName) activeName.textContent = isOnline ? myPlayerName : state.partner1;
+      if (phaseBadge) {
+        phaseBadge.textContent = isOnline
+          ? `🟢 Live Secret Voting (${myPlayerName})`
+          : `Step 1: ${state.partner1} Votes Privately`;
+      }
+      if (submitP1Btn) {
+        submitP1Btn.textContent = isOnline
+          ? 'Lock My Secret Choices & Sync with Partner 🔒 →'
+          : 'Lock Secret Choices & Pass Phone 🔒 →';
+      }
 
       if (voteSec) voteSec.classList.remove('hidden');
       if (handoffSec) handoffSec.classList.add('hidden');
@@ -4793,8 +4914,8 @@
       if (revealSec) revealSec.classList.add('hidden');
       if (submitP1Btn) submitP1Btn.classList.remove('hidden');
 
-      renderDesireCards(1);
-      showView('viewDesireMatcher');
+      renderDesireCards(desireMatcherState.activePlayer);
+      showView('viewDesireMatcher', shouldBroadcast);
     }
 
     function renderDesireCards(playerNum) {
@@ -4870,26 +4991,46 @@
       const p1HasVotes = Object.keys(desireMatcherState.p1Votes).length > 0;
       const p2HasVotes = Object.keys(desireMatcherState.p2Votes).length > 0;
       if (p1HasVotes && p2HasVotes) {
+        const handoffSec = document.getElementById('desireHandoffContainer');
+        if (handoffSec) handoffSec.classList.add('hidden');
         calculateAndRevealDesireMatches();
       }
     }
 
     function submitP1Desires() {
       sound.tick();
+      if (isLongDistanceMode && currentRoomCode) {
+        const myRole = isHost ? 1 : 2;
+        const targetVotes = myRole === 1 ? desireMatcherState.p1Votes : desireMatcherState.p2Votes;
+        DESIRES_DATABASE.forEach(d => {
+          if (!targetVotes[d.id]) targetVotes[d.id] = 'pass';
+        });
+        broadcastRoomMessage('DESIRE_SUBMIT', { voterRole: myRole, votes: targetVotes });
+        document.getElementById('desireVotingSection').classList.add('hidden');
+        document.getElementById('submitDesireP1Btn').classList.add('hidden');
+
+        const p1HasVotes = Object.keys(desireMatcherState.p1Votes).length > 0;
+        const p2HasVotes = Object.keys(desireMatcherState.p2Votes).length > 0;
+        if (!p1HasVotes || !p2HasVotes) {
+          const handoffSec = document.getElementById('desireHandoffContainer');
+          const handoffText = document.getElementById('desireHandoffText');
+          const readyBtn = document.getElementById('desireHandoffReadyBtn');
+          if (handoffSec) handoffSec.classList.remove('hidden');
+          if (handoffText) handoffText.textContent = `Your secret votes are encrypted and locked! Waiting for ${partnerPlayerName} to finish voting on their device...`;
+          if (readyBtn) readyBtn.classList.add('hidden');
+        }
+        showToast('Your choices are locked in secret! Waiting for partner...', '🔒');
+        checkAndTriggerOnlineDesireReveal();
+        return;
+      }
+
+      const readyBtn = document.getElementById('desireHandoffReadyBtn');
+      if (readyBtn) readyBtn.classList.remove('hidden');
       DESIRES_DATABASE.forEach(d => {
         if (!desireMatcherState.p1Votes[d.id]) {
           desireMatcherState.p1Votes[d.id] = 'pass';
         }
       });
-
-      if (isLongDistanceMode && currentRoomCode) {
-        broadcastRoomMessage('DESIRE_SUBMIT', { voterRole: 1, votes: desireMatcherState.p1Votes });
-        document.getElementById('desireVotingSection').classList.add('hidden');
-        document.getElementById('submitDesireP1Btn').classList.add('hidden');
-        showToast('Your choices are locked in secret! Waiting for partner...', '🔒');
-        checkAndTriggerOnlineDesireReveal();
-        return;
-      }
 
       // Transition to handoff
       document.getElementById('desireVotingSection').classList.add('hidden');
@@ -5350,6 +5491,12 @@
         currentQuizState.guesserName = temp;
         document.getElementById('quizPlayer1Name').textContent = currentQuizState.starterName;
         document.getElementById('quizPlayer2Name').textContent = currentQuizState.guesserName;
+        if (isLongDistanceMode && currentRoomCode) {
+          broadcastRoomMessage('QUIZ_STARTER_SWAP', {
+            starterName: currentQuizState.starterName,
+            guesserName: currentQuizState.guesserName
+          });
+        }
         sound.tick();
         showToast(`Starter switched to ${currentQuizState.starterName}!`, '🔄');
       });
@@ -5412,6 +5559,9 @@
         state.todCompleted = (state.todCompleted || 0) + 1;
         saveState();
         document.getElementById('todCompletedCount').textContent = state.todCompleted;
+        if (isLongDistanceMode && currentRoomCode) {
+          broadcastRoomMessage('TOD_COMPLETED', {});
+        }
         showToast('Challenge completed! Well done! 🎉', '✓');
         renderTodCard('random');
       });
@@ -5508,7 +5658,10 @@
       document.getElementById('wyrOptionBBtn').addEventListener('click', () => handleWyrVote('b'));
       document.getElementById('wyrNextBtn').addEventListener('click', () => {
         wyrIndex++;
-        renderWyrDilemma();
+        if (isLongDistanceMode && currentRoomCode) {
+          broadcastRoomMessage('WYR_NEXT', { wyrIndex: wyrIndex, category: wyrCurrentCategory });
+        }
+        renderWyrDilemma(false);
       });
 
       // Love notes color picks
@@ -5537,6 +5690,9 @@
         state.loveNotes.unshift(newNote);
         saveState();
         renderLoveNotes();
+        if (isLongDistanceMode && currentRoomCode) {
+          broadcastRoomMessage('NOTE_ADD', { note: newNote });
+        }
         document.getElementById('newLoveNoteInput').value = '';
         sound.success();
         showToast('Love note posted to the wall! 💌', '✨');
@@ -5698,6 +5854,9 @@
       const todTimerBtn = document.getElementById('todStartTimerBtn');
       if (todTimerBtn) todTimerBtn.addEventListener('click', () => {
         sound.playHeartbeat(74);
+        if (isLongDistanceMode && currentRoomCode) {
+          broadcastRoomMessage('TOD_HEARTBEAT_START', {});
+        }
         showToast('💓 60s Sensual Heartbeat Ambience Started!', '🔥');
         setTimeout(() => sound.stopHeartbeat(), 60000);
       });
@@ -5728,10 +5887,12 @@
         });
       }
 
-      // Update renderWyrDilemma to support filtering
+      // Update renderWyrDilemma to support filtering and reset online votes
       const origRenderWyr = renderWyrDilemma;
-      renderWyrDilemma = function() {
+      renderWyrDilemma = function(shouldBroadcast = false) {
         sound.tick();
+        wyrLocalVote = null;
+        wyrPartnerVote = null;
         let pool = WYR_DATA;
         if (wyrCurrentCategory === 'spicy') {
           pool = WYR_DATA.filter(d => d.category === 'spicy');
@@ -6710,11 +6871,15 @@
         }
         if (pool.length === 0) pool = LIE_DETECTOR_QUESTIONS;
         const picked = pool[Math.floor(Math.random() * pool.length)];
+        const qText = `${picked.text} (#${++generatedCounter})`;
         const qEl = document.getElementById('lieActiveQuestionText');
         const catEl = document.getElementById('lieQuestionCategoryLabel');
-        if (qEl) qEl.textContent = `"${picked.text} (#${++generatedCounter})"`;
+        if (qEl) qEl.textContent = `"${qText}"`;
         if (catEl) catEl.textContent = `CATEGORY: ${picked.cat.toUpperCase()} INTERROGATION`;
         document.getElementById('lieVerdictBox').classList.add('hidden');
+        if (isLongDistanceMode && currentRoomCode) {
+          broadcastRoomMessage('LIE_QUESTION', { text: qText, category: picked.cat.toUpperCase() });
+        }
       }
 
       function runBiometricScan() {
@@ -6754,20 +6919,25 @@
         }, 220);
       }
 
-      function revealPolygraphVerdict(finalBpm, finalTrem) {
+      function revealPolygraphVerdict(finalBpm, finalTrem, forcedVerdictType = null, fromNetwork = false) {
         const rigMode = document.getElementById('lieRigModeSelect').value;
         const subject = lieSubjectIsP1 ? state.partner1 : state.partner2;
         const partner = lieSubjectIsP1 ? state.partner2 : state.partner1;
 
-        let verdictType = 'truth';
-        if (rigMode === 'truth') verdictType = 'truth';
-        else if (rigMode === 'hesitation') verdictType = 'hesitation';
-        else if (rigMode === 'lie') verdictType = 'lie';
-        else {
-          const r = Math.random();
-          if (r < 0.45) verdictType = 'truth';
-          else if (r < 0.75) verdictType = 'hesitation';
-          else verdictType = 'lie';
+        let verdictType = forcedVerdictType || 'truth';
+        if (!forcedVerdictType) {
+          if (rigMode === 'truth') verdictType = 'truth';
+          else if (rigMode === 'hesitation') verdictType = 'hesitation';
+          else if (rigMode === 'lie') verdictType = 'lie';
+          else {
+            const r = Math.random();
+            if (r < 0.45) verdictType = 'truth';
+            else if (r < 0.75) verdictType = 'hesitation';
+            else verdictType = 'lie';
+          }
+        }
+        if (!fromNetwork && isLongDistanceMode && currentRoomCode) {
+          broadcastRoomMessage('LIE_VERDICT', { bpm: finalBpm, tremor: finalTrem, verdictType: verdictType });
         }
 
         const box = document.getElementById('lieVerdictBox');
