@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Couple Game Room</title>
+  <!-- Tailwind CSS for clean styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Free PeerJS Library -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body class="bg-rose-50 min-h-screen flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl p-6 shadow-xl max-w-sm w-full text-center space-y-4 border border-rose-100">
+    <h1 class="text-xl font-bold text-rose-600">💑 Long-Distance Game Room</h1>
+    
+    <!-- Connection Status Badge -->
+    <div id="statusBadge" class="py-1 px-3 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 inline-block">
+      ⚪ Disconnected
+    </div>
+
+    <!-- Room Code Entry -->
+    <div id="setupBox" class="space-y-3">
+      <input id="roomCodeInput" type="text" placeholder="Enter Room Code (e.g. SHAN24)" 
+             class="w-full px-4 py-2 border rounded-xl text-center uppercase font-bold tracking-wider text-slate-700 focus:outline-rose-400">
+      
+      <div class="grid grid-cols-2 gap-2">
+        <button id="hostBtn" class="py-2.5 px-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition">
+          Create Room
+        </button>
+        <button id="joinBtn" class="py-2.5 px-3 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl text-xs font-bold transition">
+          Join Room
+        </button>
+      </div>
+    </div>
+
+    <!-- Game Area (Shown after connection) -->
+    <div id="gameBox" class="hidden space-y-4 pt-4 border-t border-slate-100">
+      <p id="partnerAlert" class="text-xs text-emerald-600 font-bold">Connected to Partner! 🎉</p>
+      
+      <!-- Sample Game Action: Send a Love Spark -->
+      <button id="sparkBtn" class="w-full py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-bold rounded-2xl shadow-md active:scale-95 transition">
+        Send Kiss / Love Spark 💋
+      </button>
+
+      <div id="incomingMessage" class="p-3 bg-rose-50 rounded-xl text-xs text-rose-800 font-medium min-h-[48px] flex items-center justify-center">
+        Waiting for partner's move...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let peer = null;
+    let conn = null;
+
+    const setupBox = document.getElementById('setupBox');
+    const gameBox = document.getElementById('gameBox');
+    const statusBadge = document.getElementById('statusBadge');
+    const roomInput = document.getElementById('roomCodeInput');
+    const incomingMsg = document.getElementById('incomingMessage');
+
+    function setConnectedUI() {
+      setupBox.classList.add('hidden');
+      gameBox.classList.remove('hidden');
+      statusBadge.className = 'py-1 px-3 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 inline-block';
+      statusBadge.textContent = '🟢 Connected & In Sync';
+    }
+
+    // Host a Room
+    document.getElementById('hostBtn').addEventListener('click', () => {
+      const code = roomInput.value.trim().toUpperCase();
+      if (!code) return alert('Please enter a room code first!');
+
+      statusBadge.textContent = '🟡 Waiting for partner...';
+      peer = new Peer(code);
+
+      peer.on('open', (id) => {
+        statusBadge.textContent = `🟡 Room ${id} open! Tell partner to join.`;
+      });
+
+      peer.on('connection', (c) => {
+        conn = c;
+        setupDataListener();
+        setConnectedUI();
+      });
+
+      peer.on('error', (err) => alert('Code already in use or network error. Try another code!'));
+    });
+
+    // Join a Room
+    document.getElementById('joinBtn').addEventListener('click', () => {
+      const code = roomInput.value.trim().toUpperCase();
+      if (!code) return alert('Please enter the room code your partner created!');
+
+      statusBadge.textContent = '🟡 Connecting...';
+      peer = new Peer(); // Auto-assign a client ID
+
+      peer.on('open', () => {
+        conn = peer.connect(code);
+        conn.on('open', () => {
+          setupDataListener();
+          setConnectedUI();
+        });
+      });
+
+      peer.on('error', (err) => alert('Could not find room code. Check the code and try again!'));
+    });
+
+    // Listen for live messages from partner
+    function setupDataListener() {
+      conn.on('data', (data) => {
+        if (data.type === 'SPARK') {
+          incomingMsg.textContent = `❤️ Received a live kiss from your partner at ${new Date().toLocaleTimeString()}!`;
+        }
+      });
+    }
+
+    // Send action to partner
+    document.getElementById('sparkBtn').addEventListener('click', () => {
+      if (conn && conn.open) {
+        conn.send({ type: 'SPARK', timestamp: Date.now() });
+        incomingMsg.textContent = 'Sent a kiss to your partner! 💋';
+      }
+    });
+  </script>
+</body>
+</html>
